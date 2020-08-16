@@ -1,26 +1,18 @@
-from scapy.all import ARP, Ether, srp
+from collections import Counter
+from scapy.all import sniff
 
-target_ip = "" #enter your network IP address here. Left blank for obvious reasons
-# IP Address for the destination
-# create ARP packet
-arp = ARP(pdst=target_ip)
-# create the Ether broadcast packet
-# ff:ff:ff:ff:ff:ff MAC address indicates broadcasting
-ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-# stack them
-packet = ether/arp
+## Create a Packet Counter
+packet_counts = Counter()
 
-result = srp(packet, timeout=3, verbose=0)[0]
+## Define our Custom Action function
+def custom_action(packet):
+    # Create tuple of Src/Dst in sorted order
+    key = tuple(sorted([packet[0][1].src, packet[0][1].dst]))
+    packet_counts.update([key])
+    return f"Packet #{sum(packet_counts.values())}: {packet[0][1].src} ==> {packet[0][1].dst}"
 
-# a list of clients, we will fill this in the upcoming loop
-clients = []
+## Setup sniff, filtering for IP traffic
+sniff(filter="ip", prn=custom_action, count=10)
 
-for sent, received in result:
-    # for each response, append ip and mac address to `clients` list
-    clients.append({'ip': received.psrc, 'mac': received.hwsrc})
-
-# print clients
-print("Available devices in the network:")
-print("IP" + " "*18+"MAC")
-for client in clients:
-    print("{:16}    {}".format(client['ip'], client['mac']))
+## Print out packet count per A <--> Z address pair
+print("\n".join(f"{f'{key[0]} <--> {key[1]}'}: {count}" for key, count in packet_counts.items()))
