@@ -1,7 +1,9 @@
+import os
 from collections import Counter
 from scapy.all import sniff
+import time
 
-## Create a Packet Counter
+# ## Create a Packet Counter
 packet_counts = Counter()
 
 ## Define our Custom Action function
@@ -15,4 +17,5 @@ def custom_action(packet):
 sniff(filter="ip", prn=custom_action, count=10)
 
 ## Print out packet count per A <--> Z address pair
-print("\n".join(f"{f'{key[0]} <--> {key[1]}'}: {count}" for key, count in packet_counts.items()))
+print("\n".join(f"{f' Key: {key[0]} <-->  Address: {key[1]}'}: {count}" for key, count in packet_counts.items()))
+
